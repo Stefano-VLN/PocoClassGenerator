@@ -36,7 +36,7 @@ namespace PocoClassGenerator
             sb.AppendLine($"public class {dt.TableName}");
             sb.AppendLine("{");
             foreach (DataColumn dc in dt.Columns)
-                sb.AppendLine($" public {GetTypeAliase(dc.DataType)} {dc.ColumnName} {{ get; set; }}");
+                sb.AppendLine($"    public {GetTypeAliase(dc.DataType)} {dc.ColumnName} {{ get; set; }}");
             sb.Append('}');
             return sb.ToString();
         }
