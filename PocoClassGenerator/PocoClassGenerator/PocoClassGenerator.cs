@@ -71,9 +71,9 @@ namespace PocoClassGenerator
         {
             if (connection.State != ConnectionState.Open) connection.Open();
 
-            var conneciontName = connection.GetType().Name.ToLower();
+            var connectionName = connection.GetType().Name.ToLower();
             var tables = new List<string>();
-            var sql = generatorBehavior.HasFlag(GeneratorBehavior.View) ? TableSchemaSqls[conneciontName].Split("where")[0] : TableSchemaSqls[conneciontName];
+            var sql = generatorBehavior.HasFlag(GeneratorBehavior.View) ? TableSchemaSqls[connectionName].Split("where")[0] : TableSchemaSqls[connectionName];
             using (var command = connection.CreateCommand(sql))
             using (var reader = command.ExecuteReader())
             {
@@ -84,7 +84,7 @@ namespace PocoClassGenerator
             var sb = new StringBuilder();
             sb.AppendLine("namespace Models { ");
             tables.ForEach(table => sb.Append(connection.GenerateClass(
-            string.Format(QuerySqls[conneciontName], table), table, generatorBehavior: generatorBehavior
+            string.Format(QuerySqls[connectionName], table), table, generatorBehavior: generatorBehavior
             )));
             sb.AppendLine("}");
             return sb.ToString();
@@ -130,7 +130,7 @@ namespace PocoClassGenerator
                         var type = (Type)row["DataType"];
                         var name = TypeAliases.TryGetValue(type, out string value) ? value : type.FullName;
                         var isNullable = (bool)row["AllowDBNull"] && NullableTypes.Contains(type);
-                        var collumnName = (string)row["ColumnName"];
+                        var columnName = (string)row["ColumnName"];
 
                         if (generatorBehavior.HasFlag(GeneratorBehavior.Comment) && !isFromMutiTables)
                         {
@@ -159,7 +159,7 @@ namespace PocoClassGenerator
                                 builder.AppendLine(" [Dapper.Contrib.Extensions.Computed]");
                         }
 
-                        builder.AppendLine(string.Format(" public {0}{1} {2} {{ get; set; }}", name, isNullable ? "?" : string.Empty, collumnName));
+                        builder.AppendLine(string.Format("    public {0}{1} {2} {{ get; set; }}{3}", name, isNullable ? "?" : string.Empty, columnName, name == "string" && !isNullable ? " = string.Empty;" : string.Empty));
                     }
 
                     builder.AppendLine(" }");
