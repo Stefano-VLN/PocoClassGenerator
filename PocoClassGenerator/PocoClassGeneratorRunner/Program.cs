@@ -1,5 +1,5 @@
-﻿using PocoClassGenerator;
-using System.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
+using PocoClassGenerator;
 
 namespace PocoClassGeneratorRunner
 {
