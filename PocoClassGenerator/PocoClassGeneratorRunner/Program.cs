@@ -8,7 +8,7 @@ namespace PocoClassGeneratorRunner
         static void Main()
         {
             using var conn = new SqlConnection(@"Server = ABV-DB-03;Database = DATAOPS;Trusted_Connection=True;");
-            var Pocos = conn.GenerateAllTables();
+            var Pocos = conn.GenerateAllTables(GeneratorBehavior.View);
             File.WriteAllText("Pocos.cs", Pocos);
         }
     }
