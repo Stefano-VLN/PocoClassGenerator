@@ -81,6 +81,8 @@ namespace PocoClassGenerator
                     tables.Add(reader.GetString(0));
             }
 
+            tables.Sort();
+
             var sb = new StringBuilder();
             sb.AppendLine("namespace Models { ");
             tables.ForEach(table => sb.Append(connection.GenerateClass(
