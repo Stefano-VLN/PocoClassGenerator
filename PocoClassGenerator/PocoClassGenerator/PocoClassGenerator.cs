@@ -29,12 +29,13 @@ namespace PocoClassGenerator
             { typeof(decimal), "decimal" },
             { typeof(float), "float" },
             { typeof(bool), "bool" },
-            { typeof(string), "string" }
+            { typeof(string), "string" },
+            { typeof(DateTime), "DateTime" }
         };
 
         private static readonly Dictionary<string, string> QuerySqls = new()
         {
-            {"sqlconnection", "select * from [{0}] where 1=2" },
+            {"sqlconnection", "select * from [{0}].[{1}] where 1=2" },
             {"sqlceserver", "select * from [{0}] where 1=2" },
             {"sqliteconnection", "select * from [{0}] where 1=2" },
             {"oracleconnection", "select * from \"{0}\" where 1=2" },
@@ -44,7 +45,7 @@ namespace PocoClassGenerator
 
         private static readonly Dictionary<string, string> TableSchemaSqls = new()
         {
-            {"sqlconnection", "select TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_TYPE = 'BASE TABLE'" },
+            {"sqlconnection", "select TABLE_SCHEMA, TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_TYPE = 'BASE TABLE'" },
             {"sqlceserver", "select TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_TYPE = 'BASE TABLE'" },
             {"sqliteconnection", "SELECT name FROM sqlite_master where type = 'table'" },
             {"oracleconnection", "select TABLE_NAME from USER_TABLES where table_name not in (select View_name from user_views)" },
@@ -72,21 +73,21 @@ namespace PocoClassGenerator
             if (connection.State != ConnectionState.Open) connection.Open();
 
             var connectionName = connection.GetType().Name.ToLower();
-            var tables = new List<string>();
+            var tables = new List<(string tableSchema, string tableName)>();
             var sql = generatorBehavior.HasFlag(GeneratorBehavior.View) ? TableSchemaSqls[connectionName].Split("where")[0] : TableSchemaSqls[connectionName];
             using (var command = connection.CreateCommand(sql))
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
-                    tables.Add(reader.GetString(0));
+                    tables.Add((reader.GetString(0), reader.GetString(1)));
             }
 
-            tables.Sort();
+            tables = tables.OrderBy(t => t.tableName).ToList();
 
             var sb = new StringBuilder();
             sb.AppendLine("namespace Models { ");
             tables.ForEach(table => sb.Append(connection.GenerateClass(
-            string.Format(QuerySqls[connectionName], table), table, generatorBehavior: generatorBehavior
+            string.Format(QuerySqls[connectionName], table.tableSchema, table.tableName), table.tableName, generatorBehavior: generatorBehavior
             )));
             sb.AppendLine("}");
             return sb.ToString();
